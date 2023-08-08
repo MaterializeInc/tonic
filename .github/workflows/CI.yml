@@ -6,7 +6,41 @@ on:
     - master
   pull_request: {}
 
+env:
+  PROTOC_VERSION: 3.23.4
+
 jobs:
+
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        components: rustfmt
+    - run: cargo fmt --all --check
+
+  udeps:
+    name: Check unused dependencies
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        include:
+        - os: windows-latest
+          option: --exclude-features uds
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@nightly
+    - uses: taiki-e/install-action@cargo-hack
+    - uses: taiki-e/install-action@cargo-udeps
+    - name: Install protoc
+      uses: taiki-e/install-action@v2
+      with:
+        tool: protoc@${{ env.PROTOC_VERSION }}
+    - uses: Swatinem/rust-cache@v2
+    - run: cargo hack udeps --workspace --each-feature ${{ matrix.option }}
+
   check:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -18,32 +52,49 @@ jobs:
       RUSTFLAGS: "-D warnings"
 
     steps:
-    - uses: hecrj/setup-rust-action@master
+    - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: ${{ matrix.rust }}
-    - uses: actions/checkout@master
-    - name: Install rustfmt
-      run: rustup component add rustfmt
+    - uses: actions/checkout@v3
     - name: Install cargo-hack
-      run: cargo install cargo-hack
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v1
+      uses: baptiste0928/cargo-install@v2
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }} 
-    - uses: Swatinem/rust-cache@v1
-    - name: Check fmt
-      run: cargo fmt -- --check
+        crate: cargo-hack
+    - name: Install protoc
+      uses: taiki-e/install-action@v2
+      with:
+        tool: protoc@${{ env.PROTOC_VERSION }}
+    - uses: Swatinem/rust-cache@v2
     - name: Check features
       run: cargo hack check --all --ignore-private --each-feature --no-dev-deps
     - name: Check all targets
       run: cargo check --all --all-targets --all-features
 
-  # deny-check:
-  #   name: cargo-deny check
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v1
-  #   - uses: EmbarkStudios/cargo-deny-action@v1
+  deny-check:
+    name: cargo-deny check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: EmbarkStudios/cargo-deny-action@v1
+
+  msrv:
+    name: Check MSRV
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: "1.63"
+    - name: Install protoc
+      uses: taiki-e/install-action@v2
+      with:
+        tool: protoc@${{ env.PROTOC_VERSION }}
+    - uses: Swatinem/rust-cache@v2
+    - run: cargo check --all --all-targets --all-features
+    - run: cargo doc --no-deps --package tonic --package tonic-build --package tonic-health --package tonic-reflection --package tonic-types --package tonic-web
+      env:
+        RUSTDOCFLAGS: "-D warnings"
 
   test:
     runs-on: ${{ matrix.os }}
@@ -58,17 +109,15 @@ jobs:
       QUICKCHECK_TESTS: 1000
 
     steps:
-    - uses: hecrj/setup-rust-action@master
+    - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: ${{ matrix.rust }}
-    - name: Install rustfmt
-      run: rustup component add rustfmt
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v1
+    - name: Install protoc
+      uses: taiki-e/install-action@v2
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }} 
-    - uses: Swatinem/rust-cache@v1
-    - uses: actions/checkout@master
+        tool: protoc@${{ env.PROTOC_VERSION }}
+    - uses: Swatinem/rust-cache@v2
+    - uses: actions/checkout@v3
     - name: Run tests
       run: cargo test --all --all-features
 
@@ -84,17 +133,15 @@ jobs:
       RUSTFLAGS: "-D warnings"
 
     steps:
-    - uses: hecrj/setup-rust-action@master
+    - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: ${{ matrix.rust }}
-    - name: Install rustfmt
-      run: rustup component add rustfmt
-    - uses: actions/checkout@master
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v1
+    - uses: actions/checkout@v3
+    - name: Install protoc
+      uses: taiki-e/install-action@v2
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }} 
-    - uses: Swatinem/rust-cache@v1
+        tool: protoc@${{ env.PROTOC_VERSION }}
+    - uses: Swatinem/rust-cache@v2
     - name: Run interop tests
       run: ./interop/test.sh
       shell: bash

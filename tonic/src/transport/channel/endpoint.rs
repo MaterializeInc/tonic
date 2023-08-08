@@ -7,14 +7,7 @@ use crate::transport::service::TlsConnector;
 use crate::transport::{service::SharedExec, Error, Executor};
 use bytes::Bytes;
 use http::{uri::Uri, HeaderValue};
-use std::{
-    convert::{TryFrom, TryInto},
-    fmt,
-    future::Future,
-    pin::Pin,
-    str::FromStr,
-    time::Duration,
-};
+use std::{fmt, future::Future, pin::Pin, str::FromStr, time::Duration};
 use tower::make::MakeConnection;
 // use crate::transport::E
 
@@ -215,7 +208,7 @@ impl Endpoint {
     ///
     /// Default is 65,535
     ///
-    /// [spec]: https://http2.github.io/http2-spec/#SETTINGS_INITIAL_WINDOW_SIZE
+    /// [spec]: https://httpwg.org/specs/rfc9113.html#InitialWindowSize
     pub fn initial_stream_window_size(self, sz: impl Into<Option<u32>>) -> Self {
         Endpoint {
             init_stream_window_size: sz.into(),

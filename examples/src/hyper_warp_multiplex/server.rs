@@ -3,8 +3,7 @@
 //! To hit the warp server you can run this command:
 //! `curl localhost:50051/hello`
 
-use futures::future::{self, Either, TryFutureExt};
-use futures::Stream;
+use either::Either;
 use http::version::Version;
 use hyper::{service::make_service_fn, Server};
 use std::convert::Infallible;
@@ -23,7 +22,7 @@ pub mod hello_world {
 }
 
 pub mod echo {
-    tonic::include_proto!("grpc.examples.echo");
+    tonic::include_proto!("grpc.examples.unaryecho");
 }
 use hello_world::{
     greeter_server::{Greeter, GreeterServer},
@@ -34,8 +33,6 @@ use echo::{
     echo_server::{Echo, EchoServer},
     EchoRequest, EchoResponse,
 };
-
-type ResponseStream = Pin<Box<dyn Stream<Item = Result<EchoResponse, Status>> + Send>>;
 
 #[derive(Default)]
 pub struct MyGreeter {}
@@ -65,31 +62,6 @@ impl Echo for MyEcho {
         let message = request.into_inner().message;
         Ok(Response::new(EchoResponse { message }))
     }
-
-    type ServerStreamingEchoStream = ResponseStream;
-
-    async fn server_streaming_echo(
-        &self,
-        _: Request<EchoRequest>,
-    ) -> Result<Response<Self::ServerStreamingEchoStream>, Status> {
-        Err(Status::unimplemented("Not yet implemented"))
-    }
-
-    async fn client_streaming_echo(
-        &self,
-        _: Request<tonic::Streaming<EchoRequest>>,
-    ) -> Result<Response<EchoResponse>, Status> {
-        Err(Status::unimplemented("Not yet implemented"))
-    }
-
-    type BidirectionalStreamingEchoStream = ResponseStream;
-
-    async fn bidirectional_streaming_echo(
-        &self,
-        _: Request<tonic::Streaming<EchoRequest>>,
-    ) -> Result<Response<Self::BidirectionalStreamingEchoStream>, Status> {
-        Err(Status::unimplemented("Not yet implemented"))
-    }
 }
 
 #[tokio::main]
@@ -108,22 +80,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .add_service(echo)
                 .into_service();
 
-            future::ok::<_, Infallible>(tower::service_fn(
+            std::future::ready(Ok::<_, Infallible>(tower::service_fn(
                 move |req: hyper::Request<hyper::Body>| match req.version() {
-                    Version::HTTP_11 | Version::HTTP_10 => Either::Left(
-                        warp.call(req)
-                            .map_ok(|res| res.map(EitherBody::Left))
-                            .map_err(Error::from),
-                    ),
-                    Version::HTTP_2 => Either::Right(
-                        tonic
-                            .call(req)
-                            .map_ok(|res| res.map(EitherBody::Right))
-                            .map_err(Error::from),
-                    ),
+                    Version::HTTP_11 | Version::HTTP_10 => Either::Left({
+                        let res = warp.call(req);
+                        Box::pin(async move {
+                            let res = res.await.map(|res| res.map(EitherBody::Left))?;
+                            Ok::<_, Error>(res)
+                        })
+                    }),
+                    Version::HTTP_2 => Either::Right({
+                        let res = tonic.call(req);
+                        Box::pin(async move {
+                            let res = res.await.map(|res| res.map(EitherBody::Right))?;
+                            Ok::<_, Error>(res)
+                        })
+                    }),
                     _ => unimplemented!(),
                 },
-            ))
+            )))
         }))
         .await?;
 

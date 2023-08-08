@@ -83,7 +83,7 @@ impl Channel {
         Endpoint::from(uri)
     }
 
-    /// Create an `Endpoint` from a static string.
+    /// Create an [`Endpoint`] from a static string.
     ///
     /// ```
     /// # use tonic::transport::Channel;
@@ -94,7 +94,7 @@ impl Channel {
         Self::builder(uri)
     }
 
-    /// Create an `Endpoint` from shared bytes.
+    /// Create an [`Endpoint`] from shared bytes.
     ///
     /// ```
     /// # use tonic::transport::Channel;
@@ -188,7 +188,7 @@ impl Channel {
         D: Discover<Service = Connection> + Unpin + Send + 'static,
         D::Error: Into<crate::Error>,
         D::Key: Hash + Send + Clone,
-        E: Executor<futures_core::future::BoxFuture<'static, ()>> + Send + Sync + 'static,
+        E: Executor<futures_util::future::BoxFuture<'static, ()>> + Send + Sync + 'static,
     {
         let svc = Balance::new(discover);
 

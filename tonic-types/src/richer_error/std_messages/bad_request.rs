@@ -1,8 +1,7 @@
 use prost::{DecodeError, Message};
 use prost_types::Any;
 
-use super::super::pb;
-use super::super::{FromAny, IntoAny};
+use super::super::{pb, FromAny, IntoAny};
 
 /// Used at the `field_violations` field of the [`BadRequest`] struct.
 /// Describes a single bad request field.
@@ -43,8 +42,10 @@ impl BadRequest {
     pub const TYPE_URL: &'static str = "type.googleapis.com/google.rpc.BadRequest";
 
     /// Creates a new [`BadRequest`] struct.
-    pub fn new(field_violations: Vec<FieldViolation>) -> Self {
-        BadRequest { field_violations }
+    pub fn new(field_violations: impl Into<Vec<FieldViolation>>) -> Self {
+        BadRequest {
+            field_violations: field_violations.into(),
+        }
     }
 
     /// Creates a new [`BadRequest`] struct with a single [`FieldViolation`] in
@@ -154,7 +155,7 @@ mod tests {
         );
 
         assert!(
-            br_details.is_empty() == false,
+            !br_details.is_empty(),
             "filled BadRequest returns 'true' from .is_empty()"
         );
 

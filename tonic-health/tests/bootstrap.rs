@@ -12,7 +12,9 @@ fn bootstrap() {
     tonic_build::configure()
         .build_client(true)
         .build_server(true)
-        .out_dir(format!("{}", out_dir.display()))
+        .build_transport(false)
+        .out_dir(&out_dir)
+        .file_descriptor_set_path(out_dir.join("grpc_health_v1.bin"))
         .compile(iface_files, dirs)
         .unwrap();
 
@@ -20,11 +22,9 @@ fn bootstrap() {
         .arg("diff")
         .arg("--exit-code")
         .arg("--")
-        .arg(format!("{}", out_dir.display()))
+        .arg(&out_dir)
         .status()
         .unwrap();
 
-    if !status.success() {
-        panic!("You should commit the protobuf files");
-    }
+    assert!(status.success(), "You should commit the protobuf files");
 }

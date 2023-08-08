@@ -1,5 +1,6 @@
 use crate::body::BoxBody;
 use crate::metadata::MetadataMap;
+use base64::Engine as _;
 use bytes::Bytes;
 use http::header::{HeaderMap, HeaderValue};
 use percent_encoding::{percent_decode, percent_encode, AsciiSet, CONTROLS};
@@ -324,7 +325,14 @@ impl Status {
         })
     }
 
-    pub(crate) fn try_from_error(
+    /// Create a `Status` from various types of `Error`.
+    ///
+    /// Returns the error if a status could not be created.
+    ///
+    /// # Downcast stability
+    /// This function does not provide any stability guarantees around how it will downcast errors into
+    /// status codes.
+    pub fn try_from_error(
         err: Box<dyn Error + Send + Sync + 'static>,
     ) -> Result<Status, Box<dyn Error + Send + Sync + 'static>> {
         let err = match err.downcast::<Status>() {
@@ -353,8 +361,17 @@ impl Status {
     // FIXME: bubble this into `transport` and expose generic http2 reasons.
     #[cfg(feature = "transport")]
     fn from_h2_error(err: Box<h2::Error>) -> Status {
+        let code = Self::code_from_h2(&err);
+
+        let mut status = Self::new(code, format!("h2 protocol error: {}", err));
+        status.source = Some(Arc::new(*err));
+        status
+    }
+
+    #[cfg(feature = "transport")]
+    fn code_from_h2(err: &h2::Error) -> Code {
         // See https://github.com/grpc/grpc/blob/3977c30/doc/PROTOCOL-HTTP2.md#errors
-        let code = match err.reason() {
+        match err.reason() {
             Some(h2::Reason::NO_ERROR)
             | Some(h2::Reason::PROTOCOL_ERROR)
             | Some(h2::Reason::INTERNAL_ERROR)
@@ -368,11 +385,7 @@ impl Status {
             Some(h2::Reason::INADEQUATE_SECURITY) => Code::PermissionDenied,
 
             _ => Code::Unknown,
-        };
-
-        let mut status = Self::new(code, format!("h2 protocol error: {}", err));
-        status.source = Some(Arc::new(*err));
-        status
+        }
     }
 
     #[cfg(feature = "transport")]
@@ -408,6 +421,14 @@ impl Status {
         if err.is_timeout() || err.is_connect() {
             return Some(Status::unavailable(err.to_string()));
         }
+
+        if let Some(h2_err) = err.source().and_then(|e| e.downcast_ref::<h2::Error>()) {
+            let code = Status::code_from_h2(h2_err);
+            let status = Self::new(code, format!("h2 protocol error: {}", err));
+
+            return Some(status);
+        }
+
         None
     }
 
@@ -435,7 +456,8 @@ impl Status {
             let details = header_map
                 .get(GRPC_STATUS_DETAILS_HEADER)
                 .map(|h| {
-                    base64::decode(h.as_bytes())
+                    crate::util::base64::STANDARD
+                        .decode(h.as_bytes())
                         .expect("Invalid status header, expected base64 encoded value")
                 })
                 .map(Bytes::from)
@@ -499,7 +521,8 @@ impl Status {
         Ok(header_map)
     }
 
-    pub(crate) fn add_header(&self, header_map: &mut HeaderMap) -> Result<(), Self> {
+    /// Add headers from this `Status` into `header_map`.
+    pub fn add_header(&self, header_map: &mut HeaderMap) -> Result<(), Self> {
         header_map.extend(self.metadata.clone().into_sanitized_headers());
 
         header_map.insert(GRPC_STATUS_HEADER_CODE, self.code.to_header_value());
@@ -516,7 +539,7 @@ impl Status {
         }
 
         if !self.details.is_empty() {
-            let details = base64::encode_config(&self.details[..], base64::STANDARD_NO_PAD);
+            let details = crate::util::base64::STANDARD_NO_PAD.encode(&self.details[..]);
 
             header_map.insert(
                 GRPC_STATUS_DETAILS_HEADER,
@@ -551,6 +574,12 @@ impl Status {
             metadata,
             source: None,
         }
+    }
+
+    /// Add a source error to this status.
+    pub fn set_source(&mut self, source: Arc<dyn Error + Send + Sync + 'static>) -> &mut Status {
+        self.source = Some(source);
+        self
     }
 
     #[allow(clippy::wrong_self_convention)]
@@ -971,7 +1000,7 @@ mod tests {
 
         let header_map = status.to_header_map().unwrap();
 
-        let b64_details = base64::encode_config(DETAILS, base64::STANDARD_NO_PAD);
+        let b64_details = crate::util::base64::STANDARD_NO_PAD.encode(DETAILS);
 
         assert_eq!(header_map[super::GRPC_STATUS_DETAILS_HEADER], b64_details);
 

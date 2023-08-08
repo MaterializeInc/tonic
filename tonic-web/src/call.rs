@@ -2,11 +2,13 @@ use std::error::Error;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+use base64::Engine as _;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
-use futures_core::{ready, Stream};
+use futures_core::ready;
 use http::{header, HeaderMap, HeaderValue};
 use http_body::{Body, SizeHint};
 use pin_project::pin_project;
+use tokio_stream::Stream;
 use tonic::Status;
 
 use self::content_types::*;
@@ -100,7 +102,8 @@ impl<B> GrpcWebCall<B> {
         // returned `Bytes`, keeping the rest for the next attempt to decode.
         let index = self.max_decodable();
 
-        base64::decode(self.as_mut().project().buf.split_to(index))
+        crate::util::base64::STANDARD
+            .decode(self.as_mut().project().buf.split_to(index))
             .map(|decoded| Some(Bytes::from(decoded)))
             .map_err(internal_error)
     }
@@ -151,7 +154,7 @@ where
 
         if let Some(mut res) = ready!(this.inner.as_mut().poll_data(cx)) {
             if *this.encoding == Encoding::Base64 {
-                res = res.map(|b| base64::encode(b).into())
+                res = res.map(|b| crate::util::base64::STANDARD.encode(b).into())
             }
 
             return Poll::Ready(Some(res.map_err(internal_error)));
@@ -165,7 +168,7 @@ where
                     let mut frame = make_trailers_frame(map);
 
                     if *this.encoding == Encoding::Base64 {
-                        frame = base64::encode(frame).into_bytes();
+                        frame = crate::util::base64::STANDARD.encode(frame).into_bytes();
                     }
 
                     *this.poll_trailers = false;

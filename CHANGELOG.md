@@ -1,3 +1,101 @@
+# [v0.9.2](https://github.com/hyperium/tonic/compare/v0.9.1...v0.9.2) (2023-04-17)
+
+### Features
+
+- **build:**: Support boxing fields ([#1252](https://github.com/hyperium/tonic/pull/1252))
+
+
+# [v0.9.1](https://github.com/hyperium/tonic/compare/v0.9.0...v0.9.1) (2023-04-03)
+
+### Features
+
+- **transport:** Update `rustls` to `0.21` ([#1340](https://github.com/hyperium/tonic/pull/1340))
+
+# [v0.9.0](https://github.com/hyperium/tonic/compare/v0.8.4...v0.9.0) (2023-03-31)
+
+All tonic-* crates owned by this repository will now be versioned together to
+make it easier to understand which crate matches the core tonic crate version. 
+
+### Breaking Changes
+
+- All crates bumped to 2021 edition
+- `tonic-health` and `tonic-reflection` internal protobuf module renamed.
+- Default decoding message limit set to `4MiB` by default.
+
+
+### Bug Fixes
+
+* **build:** Allow Services to be named Result ([#1203](https://github.com/hyperium/tonic/issues/1203)) ([a562a3c](https://github.com/hyperium/tonic/commit/a562a3ce329a38696dfcb0d82b7102d93fb30a5c)), closes [#1156](https://github.com/hyperium/tonic/issues/1156)
+* **codec:** Cancelled client streaming handling ([#1315](https://github.com/hyperium/tonic/issues/1315)) ([c8027a1](https://github.com/hyperium/tonic/commit/c8027a1385dd5d3fb6abdce7be49c46a43d4f3c2)), closes [#848](https://github.com/hyperium/tonic/issues/848)
+* MetadataKey::from_bytes returns an error ([#1246](https://github.com/hyperium/tonic/issues/1246)) ([930c805](https://github.com/hyperium/tonic/commit/930c805127cada70e4e4ab03c7680214b5c2a4f5))
+* **web:** Fix `enable` and update docs ([#1326](https://github.com/hyperium/tonic/issues/1326)) ([a9db219](https://github.com/hyperium/tonic/commit/a9db219e50b7d27e48cd44e76941113a36b72e26))
+
+
+### Features
+
+* add GrpcMethod extension into request for client ([#1275](https://github.com/hyperium/tonic/issues/1275)) ([7a6b20d](https://github.com/hyperium/tonic/commit/7a6b20d8ef5d31c9cc01f0cf697df1f3e28cb421))
+* **build:** Builder: add {enum,message}_attributes ([#1234](https://github.com/hyperium/tonic/issues/1234)) ([ff642f9](https://github.com/hyperium/tonic/commit/ff642f9233beab322333745f9edfa9c62ae18ca4))
+* **codec:** Configure max request message size ([#1274](https://github.com/hyperium/tonic/issues/1274)) ([9f716d8](https://github.com/hyperium/tonic/commit/9f716d841184b8521720c6ed941af137ca2ee6a0)), closes [#1097](https://github.com/hyperium/tonic/issues/1097)
+* **core:** Default encoding/decoding limits ([#1335](https://github.com/hyperium/tonic/issues/1335)) ([ff33119](https://github.com/hyperium/tonic/commit/ff331199e45c8b53e93f1bd51ccd74dafc2146ac))
+* **reflection:** Add dummy implementation for extension ([#1209](https://github.com/hyperium/tonic/issues/1209)) ([fdff111](https://github.com/hyperium/tonic/commit/fdff11115b44c4cc7e3de59ea045a193fa6881bc))
+* Rename api related to protobuf ([#1224](https://github.com/hyperium/tonic/issues/1224)) ([d2542dc](https://github.com/hyperium/tonic/commit/d2542dc034e89383bd182a25a0d3235859fb10f9))
+* **tls:** add an option for optional TLS client authentication ([#1163](https://github.com/hyperium/tonic/issues/1163)) ([773e4e1](https://github.com/hyperium/tonic/commit/773e4e1749daf023222f2294816b1f09d9e916a0)), closes [#687](https://github.com/hyperium/tonic/issues/687)
+* **tonic:** Use NamedService without transport feature ([#1273](https://github.com/hyperium/tonic/issues/1273)) ([5acde56](https://github.com/hyperium/tonic/commit/5acde56176d928ffddbf1076e922764fb151f959))
+* **transport:** Add `local_addr` to `Request o` ([#1327](https://github.com/hyperium/tonic/issues/1327)) ([b54ce23](https://github.com/hyperium/tonic/commit/b54ce2321a5cba1c32261f4eda2b27d1110b893d))
+* **transport:** added support for EC keys ([#1145](https://github.com/hyperium/tonic/issues/1145)) ([17d6a4b](https://github.com/hyperium/tonic/commit/17d6a4b576c1571bb149d3e935e9a835265a80dd)), closes [#1143](https://github.com/hyperium/tonic/issues/1143)
+* **types:** Add gRPC Richer Error Model support (Docs) ([#1317](https://github.com/hyperium/tonic/issues/1317)) ([69ce71e](https://github.com/hyperium/tonic/commit/69ce71efa6f4601c9e8060e87d0641a51251e9ab))
+* **types:** Add gRPC Richer Error Model support (Examples) ([#1300](https://github.com/hyperium/tonic/issues/1300)) ([d471212](https://github.com/hyperium/tonic/commit/d471212ee8264ca6c5169a9893f361187e9378c9))
+* **types:** Add gRPC Richer Error Model support (Help) ([#1293](https://github.com/hyperium/tonic/issues/1293)) ([d6041a9](https://github.com/hyperium/tonic/commit/d6041a99c2a216a2ebc83b7bc5a0947ba7ca869c))
+* **types:** Add gRPC Richer Error Model support (LocalizedMessage) ([#1295](https://github.com/hyperium/tonic/issues/1295)) ([d54d02d](https://github.com/hyperium/tonic/commit/d54d02d3ed8bf221c0c54494b7ce692d412391a4))
+* **types:** Add gRPC Richer Error Model support (PreconditionFailure) ([#1276](https://github.com/hyperium/tonic/issues/1276)) ([2378581](https://github.com/hyperium/tonic/commit/2378581850483f26fd7c1dee0a797d936b73e881))
+* **types:** Add gRPC Richer Error Model support (QuotaFailure) ([#1204](https://github.com/hyperium/tonic/issues/1204)) ([03b4735](https://github.com/hyperium/tonic/commit/03b4735bb4ba7c6e84842d0515d1fd3be9d1cc13))
+* **types:** Add gRPC Richer Error Model support (ResourceInfo) ([#1282](https://github.com/hyperium/tonic/issues/1282)) ([7eeda24](https://github.com/hyperium/tonic/commit/7eeda24350c5a61cae7c8e56cc0439d9c40cc77d))
+* **types:** Add gRPC Richer Error Model support (RetryInfo) ([#1095](https://github.com/hyperium/tonic/issues/1095)) ([6cdb3d4](https://github.com/hyperium/tonic/commit/6cdb3d4685966b71f051e4cd67c50e1d2db402f5))
+* **types:** add support for `DebugInfo` error message type ([#1179](https://github.com/hyperium/tonic/issues/1179)) ([3076e82](https://github.com/hyperium/tonic/commit/3076e8251e602ed6e98a8b3029070b33e3459109))
+* **types:** Expose FILE_DESCRIPTOR_SET  ([#1210](https://github.com/hyperium/tonic/issues/1210)) ([cc42d1f](https://github.com/hyperium/tonic/commit/cc42d1f88c39d87b244f863daf4ff625f6ff36df))
+* **core:** Make some functionality of Status public ([#1256](https://github.com/hyperium/tonic/issues/1256)) 
+* **core:** Expose Response#into_parts and Response#from_parts ([#1263](https://github.com/hyperium/tonic/issues/1263)) 
+* **build:** Allow setting skip_protoc_run on the prost Builder ([#1318](https://github.com/hyperium/tonic/issues/1318))
+
+
+# [v0.8.4](https://github.com/hyperium/tonic/compare/v0.8.3...v0.8.4) (2022-11-29)
+
+This release only contains a release for `tonic-build`.
+
+### Bug Fixes
+
+* **build:** Fix CodeGen8uilder typo ([#1165](https://github.com/hyperium/tonic/issues/1165)) ([#1166](https://github.com/hyperium/tonic/issues/1166)) ([c7476ff](https://github.com/hyperium/tonic/commit/c7476fff425b972c7966228fd38a9191e8d2ddc9))
+
+
+# [v0.8.3](https://github.com/hyperium/tonic/compare/v0.8.2...v0.8.3) (2022-11-28)
+
+**note:** this version has been yanked due to a typo in the `CodeGenBuilder`
+type.
+
+Included in this release is also the sub-crate major version bumps:
+
+* `tonic-health` has been bumped to `0.8.0` 
+* `tonic-reflection` has been bumped to `0.6.0`
+* `tonic-web` has been bumped to `0.5.0`
+
+
+### Bug Fixes
+
+* do not panic while encoding oversized bodies ([#1142](https://github.com/hyperium/tonic/issues/1142)) ([33e22bb](https://github.com/hyperium/tonic/commit/33e22bbc5ef1b74de82394c3ebfea27382419620)), closes [#1141](https://github.com/hyperium/tonic/issues/1141)
+* **reflection, health:** Remove transport feature ([#1112](https://github.com/hyperium/tonic/issues/1112)) ([7153289](https://github.com/hyperium/tonic/commit/7153289b51f7770cdd00cefeceddacc4cf36df97))
+
+
+### Features
+
+* **build:** Add `build_transport` builder option ([#1130](https://github.com/hyperium/tonic/issues/1130)) ([1f5bc9b](https://github.com/hyperium/tonic/commit/1f5bc9b9d55f814d1cb83de6f43239e275122265))
+* **build:** Add `CodeGenBuilder` ([#1154](https://github.com/hyperium/tonic/issues/1154)) ([c4525ba](https://github.com/hyperium/tonic/commit/c4525ba6ad21cf9db8d1857931f430cbe924aeb5))
+* **build:** Add disable_comments option ([#1127](https://github.com/hyperium/tonic/issues/1127)) ([e188521](https://github.com/hyperium/tonic/commit/e1885211495e63d962bc1d00f9be6eeaab2bb901))
+* Expose `Request#into_parts` and `Request#from_parts` ([#1118](https://github.com/hyperium/tonic/issues/1118)) ([b409ddd](https://github.com/hyperium/tonic/commit/b409ddd478959e239aeef3cb8715cd3ace470a8f))
+* **transport:** add `from_listener` for `TcpIncoming` ([#1093](https://github.com/hyperium/tonic/issues/1093)) ([0b03b30](https://github.com/hyperium/tonic/commit/0b03b30cccc67d517b05587614405d63d942b1bb))
+* **web:** Implement tower::Layer for tonic_web::Config ([#1119](https://github.com/hyperium/tonic/issues/1119)) ([40536dc](https://github.com/hyperium/tonic/commit/40536dc13428f6338610d74f7b45a5f9c87d9335))
+* **web:** Removed Cors impl and replaced with tower-http's CorsLayer ([#1123](https://github.com/hyperium/tonic/issues/1123)) ([a98d719](https://github.com/hyperium/tonic/commit/a98d719fb4b0a88127504a1ab3eb472e842c6b71)), closes [#1122](https://github.com/hyperium/tonic/issues/1122)
+
+
 # [0.8.2](https://github.com/hyperium/tonic/compare/v0.8.1...v0.8.2) (2022-09-28)
 
 

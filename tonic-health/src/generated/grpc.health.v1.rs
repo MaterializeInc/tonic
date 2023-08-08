@@ -1,16 +1,28 @@
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct HealthCheckRequest {
-    #[prost(string, tag="1")]
+    #[prost(string, tag = "1")]
     pub service: ::prost::alloc::string::String,
 }
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct HealthCheckResponse {
-    #[prost(enumeration="health_check_response::ServingStatus", tag="1")]
+    #[prost(enumeration = "health_check_response::ServingStatus", tag = "1")]
     pub status: i32,
 }
 /// Nested message and enum types in `HealthCheckResponse`.
 pub mod health_check_response {
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
     #[repr(i32)]
     pub enum ServingStatus {
         Unknown = 0,
@@ -32,6 +44,16 @@ pub mod health_check_response {
                 ServingStatus::ServiceUnknown => "SERVICE_UNKNOWN",
             }
         }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "UNKNOWN" => Some(Self::Unknown),
+                "SERVING" => Some(Self::Serving),
+                "NOT_SERVING" => Some(Self::NotServing),
+                "SERVICE_UNKNOWN" => Some(Self::ServiceUnknown),
+                _ => None,
+            }
+        }
     }
 }
 /// Generated client implementations.
@@ -42,17 +64,6 @@ pub mod health_client {
     #[derive(Debug, Clone)]
     pub struct HealthClient<T> {
         inner: tonic::client::Grpc<T>,
-    }
-    impl HealthClient<tonic::transport::Channel> {
-        /// Attempt to create a new client by connecting to a given endpoint.
-        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
-        where
-            D: std::convert::TryInto<tonic::transport::Endpoint>,
-            D::Error: Into<StdError>,
-        {
-            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
-            Ok(Self::new(conn))
-        }
     }
     impl<T> HealthClient<T>
     where
@@ -103,12 +114,31 @@ pub mod health_client {
             self.inner = self.inner.accept_compressed(encoding);
             self
         }
-        ///If the requested service is unknown, the call will fail with status
-        ///NOT_FOUND.
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_decoding_message_size(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_encoding_message_size(limit);
+            self
+        }
+        /// If the requested service is unknown, the call will fail with status
+        /// NOT_FOUND.
         pub async fn check(
             &mut self,
             request: impl tonic::IntoRequest<super::HealthCheckRequest>,
-        ) -> Result<tonic::Response<super::HealthCheckResponse>, tonic::Status> {
+        ) -> std::result::Result<
+            tonic::Response<super::HealthCheckResponse>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await
@@ -122,27 +152,30 @@ pub mod health_client {
             let path = http::uri::PathAndQuery::from_static(
                 "/grpc.health.v1.Health/Check",
             );
-            self.inner.unary(request.into_request(), path, codec).await
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("grpc.health.v1.Health", "Check"));
+            self.inner.unary(req, path, codec).await
         }
-        ///Performs a watch for the serving status of the requested service.
-        ///The server will immediately send back a message indicating the current
-        ///serving status.  It will then subsequently send a new message whenever
-        ///the service's serving status changes.
+        /// Performs a watch for the serving status of the requested service.
+        /// The server will immediately send back a message indicating the current
+        /// serving status.  It will then subsequently send a new message whenever
+        /// the service's serving status changes.
         ///
-        ///If the requested service is unknown when the call is received, the
-        ///server will send a message setting the serving status to
-        ///SERVICE_UNKNOWN but will *not* terminate the call.  If at some
-        ///future point, the serving status of the service becomes known, the
-        ///server will send a new message with the service's serving status.
+        /// If the requested service is unknown when the call is received, the
+        /// server will send a message setting the serving status to
+        /// SERVICE_UNKNOWN but will *not* terminate the call.  If at some
+        /// future point, the serving status of the service becomes known, the
+        /// server will send a new message with the service's serving status.
         ///
-        ///If the call terminates with status UNIMPLEMENTED, then clients
-        ///should assume this method is not supported and should not retry the
-        ///call.  If the call terminates with any other status (including OK),
-        ///clients should retry the call with appropriate exponential backoff.
+        /// If the call terminates with status UNIMPLEMENTED, then clients
+        /// should assume this method is not supported and should not retry the
+        /// call.  If the call terminates with any other status (including OK),
+        /// clients should retry the call with appropriate exponential backoff.
         pub async fn watch(
             &mut self,
             request: impl tonic::IntoRequest<super::HealthCheckRequest>,
-        ) -> Result<
+        ) -> std::result::Result<
             tonic::Response<tonic::codec::Streaming<super::HealthCheckResponse>>,
             tonic::Status,
         > {
@@ -159,7 +192,10 @@ pub mod health_client {
             let path = http::uri::PathAndQuery::from_static(
                 "/grpc.health.v1.Health/Watch",
             );
-            self.inner.server_streaming(request.into_request(), path, codec).await
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("grpc.health.v1.Health", "Watch"));
+            self.inner.server_streaming(req, path, codec).await
         }
     }
 }
@@ -167,46 +203,51 @@ pub mod health_client {
 pub mod health_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    ///Generated trait containing gRPC methods that should be implemented for use with HealthServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with HealthServer.
     #[async_trait]
     pub trait Health: Send + Sync + 'static {
-        ///If the requested service is unknown, the call will fail with status
-        ///NOT_FOUND.
+        /// If the requested service is unknown, the call will fail with status
+        /// NOT_FOUND.
         async fn check(
             &self,
             request: tonic::Request<super::HealthCheckRequest>,
-        ) -> Result<tonic::Response<super::HealthCheckResponse>, tonic::Status>;
-        ///Server streaming response type for the Watch method.
-        type WatchStream: futures_core::Stream<
-                Item = Result<super::HealthCheckResponse, tonic::Status>,
+        ) -> std::result::Result<
+            tonic::Response<super::HealthCheckResponse>,
+            tonic::Status,
+        >;
+        /// Server streaming response type for the Watch method.
+        type WatchStream: tonic::codegen::tokio_stream::Stream<
+                Item = std::result::Result<super::HealthCheckResponse, tonic::Status>,
             >
             + Send
             + 'static;
-        ///Performs a watch for the serving status of the requested service.
-        ///The server will immediately send back a message indicating the current
-        ///serving status.  It will then subsequently send a new message whenever
-        ///the service's serving status changes.
+        /// Performs a watch for the serving status of the requested service.
+        /// The server will immediately send back a message indicating the current
+        /// serving status.  It will then subsequently send a new message whenever
+        /// the service's serving status changes.
         ///
-        ///If the requested service is unknown when the call is received, the
-        ///server will send a message setting the serving status to
-        ///SERVICE_UNKNOWN but will *not* terminate the call.  If at some
-        ///future point, the serving status of the service becomes known, the
-        ///server will send a new message with the service's serving status.
+        /// If the requested service is unknown when the call is received, the
+        /// server will send a message setting the serving status to
+        /// SERVICE_UNKNOWN but will *not* terminate the call.  If at some
+        /// future point, the serving status of the service becomes known, the
+        /// server will send a new message with the service's serving status.
         ///
-        ///If the call terminates with status UNIMPLEMENTED, then clients
-        ///should assume this method is not supported and should not retry the
-        ///call.  If the call terminates with any other status (including OK),
-        ///clients should retry the call with appropriate exponential backoff.
+        /// If the call terminates with status UNIMPLEMENTED, then clients
+        /// should assume this method is not supported and should not retry the
+        /// call.  If the call terminates with any other status (including OK),
+        /// clients should retry the call with appropriate exponential backoff.
         async fn watch(
             &self,
             request: tonic::Request<super::HealthCheckRequest>,
-        ) -> Result<tonic::Response<Self::WatchStream>, tonic::Status>;
+        ) -> std::result::Result<tonic::Response<Self::WatchStream>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct HealthServer<T: Health> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
+        max_decoding_message_size: Option<usize>,
+        max_encoding_message_size: Option<usize>,
     }
     struct _Inner<T>(Arc<T>);
     impl<T: Health> HealthServer<T> {
@@ -219,6 +260,8 @@ pub mod health_server {
                 inner,
                 accept_compression_encodings: Default::default(),
                 send_compression_encodings: Default::default(),
+                max_decoding_message_size: None,
+                max_encoding_message_size: None,
             }
         }
         pub fn with_interceptor<F>(
@@ -242,6 +285,22 @@ pub mod health_server {
             self.send_compression_encodings.enable(encoding);
             self
         }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.max_decoding_message_size = Some(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.max_encoding_message_size = Some(limit);
+            self
+        }
     }
     impl<T, B> tonic::codegen::Service<http::Request<B>> for HealthServer<T>
     where
@@ -255,7 +314,7 @@ pub mod health_server {
         fn poll_ready(
             &mut self,
             _cx: &mut Context<'_>,
-        ) -> Poll<Result<(), Self::Error>> {
+        ) -> Poll<std::result::Result<(), Self::Error>> {
             Poll::Ready(Ok(()))
         }
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
@@ -277,13 +336,17 @@ pub mod health_server {
                             &mut self,
                             request: tonic::Request<super::HealthCheckRequest>,
                         ) -> Self::Future {
-                            let inner = self.0.clone();
-                            let fut = async move { (*inner).check(request).await };
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Health>::check(&inner, request).await
+                            };
                             Box::pin(fut)
                         }
                     }
                     let accept_compression_encodings = self.accept_compression_encodings;
                     let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
@@ -293,6 +356,10 @@ pub mod health_server {
                             .apply_compression_config(
                                 accept_compression_encodings,
                                 send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
                             );
                         let res = grpc.unary(method, req).await;
                         Ok(res)
@@ -316,13 +383,17 @@ pub mod health_server {
                             &mut self,
                             request: tonic::Request<super::HealthCheckRequest>,
                         ) -> Self::Future {
-                            let inner = self.0.clone();
-                            let fut = async move { (*inner).watch(request).await };
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Health>::watch(&inner, request).await
+                            };
                             Box::pin(fut)
                         }
                     }
                     let accept_compression_encodings = self.accept_compression_encodings;
                     let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
@@ -332,6 +403,10 @@ pub mod health_server {
                             .apply_compression_config(
                                 accept_compression_encodings,
                                 send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
                             );
                         let res = grpc.server_streaming(method, req).await;
                         Ok(res)
@@ -360,12 +435,14 @@ pub mod health_server {
                 inner,
                 accept_compression_encodings: self.accept_compression_encodings,
                 send_compression_encodings: self.send_compression_encodings,
+                max_decoding_message_size: self.max_decoding_message_size,
+                max_encoding_message_size: self.max_encoding_message_size,
             }
         }
     }
     impl<T: Health> Clone for _Inner<T> {
         fn clone(&self) -> Self {
-            Self(self.0.clone())
+            Self(Arc::clone(&self.0))
         }
     }
     impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {

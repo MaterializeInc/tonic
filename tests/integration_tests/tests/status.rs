@@ -6,7 +6,6 @@ use integration_tests::pb::{
     test_client, test_server, test_stream_client, test_stream_server, Input, InputStream, Output,
     OutputStream,
 };
-use std::convert::TryFrom;
 use std::error::Error;
 use std::time::Duration;
 use tokio::sync::oneshot;
@@ -126,12 +125,13 @@ async fn status_with_metadata() {
     jh.await.unwrap();
 }
 
-type Stream<T> =
-    std::pin::Pin<Box<dyn futures::Stream<Item = std::result::Result<T, Status>> + Send + 'static>>;
+type Stream<T> = std::pin::Pin<
+    Box<dyn tokio_stream::Stream<Item = std::result::Result<T, Status>> + Send + 'static>,
+>;
 
 #[tokio::test]
 async fn status_from_server_stream() {
-    trace_init();
+    integration_tests::trace_init();
 
     struct Svc;
 
@@ -143,7 +143,7 @@ async fn status_from_server_stream() {
             &self,
             _: Request<InputStream>,
         ) -> Result<Response<Self::StreamCallStream>, Status> {
-            let s = futures::stream::iter(vec![
+            let s = tokio_stream::iter(vec![
                 Err::<OutputStream, _>(Status::unavailable("foo")),
                 Err::<OutputStream, _>(Status::unavailable("bar")),
             ]);
@@ -179,7 +179,7 @@ async fn status_from_server_stream() {
 
 #[tokio::test]
 async fn status_from_server_stream_with_source() {
-    trace_init();
+    integration_tests::trace_init();
 
     let channel = Endpoint::try_from("http://[::]:50051")
         .unwrap()
@@ -193,10 +193,4 @@ async fn status_from_server_stream_with_source() {
 
     let source = error.source().unwrap();
     source.downcast_ref::<tonic::transport::Error>().unwrap();
-}
-
-fn trace_init() {
-    let _ = tracing_subscriber::FmtSubscriber::builder()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .try_init();
 }
